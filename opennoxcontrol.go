@@ -27,27 +27,28 @@ func refresh_to_root(w http.ResponseWriter) {
 }
 
 func print_players_table(w http.ResponseWriter, info Info) {
-	fmt.Fprintf(w, "<table summary=\"server details\">\n"+
-		"<tr><td>Server Name</td><td>%v</td></tr>\n"+
-		"<tr><td>Current Mode</td><td>%v</td></tr>\n"+
-		"<tr><td>Current Map</td><td>%v</td></tr>\n"+
-		"<tr><td>Player Count</td><td>%v / %v</td></tr>\n",
+	fmt.Fprintf(w, `<table summary="server details">
+<tr><td>Server Name</td><td>%s</td></tr>
+<tr><td>Current Mode</td><td>%s</td></tr>
+<tr><td>Current Map</td><td>%s</td></tr>
+<tr><td>Player Count</td><td>%d / %d</td></tr>`,
 		info.Name, info.Mode, info.Map, info.PlayerInfo.Cur,
 		info.PlayerInfo.Max)
 
 	if info.PlayerInfo.Cur > 0 {
 		fmt.Fprintf(w, "<tr><td>Players</td><td>")
 		for i := 0; i < info.PlayerInfo.Cur; i++ {
-			fmt.Fprintf(w, "%v the %v",
+			fmt.Fprintf(w, "%s the %s",
 				info.PlayerInfo.List[i].Name,
 				info.PlayerInfo.List[i].Class)
 			if i < info.PlayerInfo.Cur-1 {
 				fmt.Fprintf(w, "<br />\n")
 			}
 		}
+		fmt.Fprintf(w, "</td></tr>")
 	}
 
-	fmt.Fprintf(w, "</td></tr></table>\n")
+	fmt.Fprintf(w, "</table>\n")
 }
 
 func print_map_form(w http.ResponseWriter, info Info) {
@@ -57,27 +58,26 @@ func print_map_form(w http.ResponseWriter, info Info) {
 			"\n<b>Map change only allowed when "+
 				"the server is empty.</b>")
 	}
-	fmt.Fprintf(w, "<form action=\"/map/\" method=\"POST\">"+
-		"<label>Change Map</label>"+
-		"<select name=\"data\">")
+	fmt.Fprintf(w, `<form action="/map/" method="POST">
+<label>Change Map</label>
+<select name="data">`)
 	for i := 0; i < len(mapnames); i++ {
-		fmt.Fprintf(w, "<option value=\"%v\"", mapnames[i])
+		fmt.Fprintf(w, `<option value="%s"`, mapnames[i])
 		if strings.EqualFold(mapnames[i], info.Map) {
 			fmt.Fprintf(w, " selected")
 		}
-		fmt.Fprintf(w, ">%v</option>\n", mapnames[i])
+		fmt.Fprintf(w, ">%s</option>\n", mapnames[i])
 	}
-	fmt.Fprintf(w, "</select>\n"+
-		"<input type=\"submit\" value=\"Submit\" />\n"+
-		"</form>\n")
+	fmt.Fprintf(w, `</select><input type="submit" value="Submit" /></form>`)
 }
 
 func print_command_form(w http.ResponseWriter) {
-	fmt.Fprintf(w, "<form action=\"/cmd/\" method=\"post\">\n"+
-		"<label>Command</label>\n"+
-		"<input type=\"text\" name=\"data\" />\n"+
-		"<input type=\"submit\" value=\"Submit\" />\n"+
-		"</form>\n")
+	fmt.Fprintf(w, `<br /><form action="/cmd/" method="post">
+<label>Command</label>
+<input type="text" name="data" />
+<input type="submit" value="Submit" />
+</form>
+`)
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
@@ -85,8 +85,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 	info = get_info()
 
-	fmt.Fprintf(w, "<!DOCTYPE html PUBLIC \""+
-		"-//W3C//DTD HTML 4.01 Transitional//EN\">\n"+
+	fmt.Fprintf(w, "<!DOCTYPE html>\n"+
 		"<html><head><title>OpenNox Server Control</title>\n"+
 		"</head>\n"+
 		"<body>\n")
