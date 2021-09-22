@@ -83,12 +83,18 @@ func print_command_form(w http.ResponseWriter) {
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	var info Info
 
-	info = get_info()
-
 	fmt.Fprintf(w, "<!DOCTYPE html>\n"+
 		"<html><head><title>OpenNox Server Control</title>\n"+
+		"<style>td { padding-right: 15px; }</style>\n"+
 		"</head>\n"+
 		"<body>\n")
+
+	info, err := get_info()
+	if err != nil {
+		log.Println(err)
+		fmt.Fprintf(w, "Couldn't get game data.</body></html>")
+		return
+	}
 
 	print_players_table(w, info)
 	print_map_form(w, info)
@@ -101,7 +107,11 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 func mapHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
-	var info Info = get_info()
+	info, err := get_info()
+	if err != nil {
+		// silently return since we can't print and expect refresh to work
+		return
+	}
 	var data = r.Form.Get("data")
 
 	if (bind_local || info.PlayerInfo.Cur == 0) && len(data) > 0 {

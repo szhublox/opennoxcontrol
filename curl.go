@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -31,38 +31,39 @@ type Info struct {
 	PlayerInfo PlayerInfo `json:"players"`
 }
 
-func get_info() Info {
+func get_info() (Info, error) {
 	api_url := api_protocol + "://" + api_host + ":" + api_port +
 		"/api/v0/game/info"
 	var info Info
 
 	resp, err := http.Get(api_url)
 	if err != nil {
-		log.Fatalln(err)
+		return info, errors.New("[opennoxcontrol]: couldn't get game data")
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		return info, errors.New("[opennoxcontrol]: couldn't parse game data")
 	}
 	json.Unmarshal(body, &info)
 	defer resp.Body.Close()
-	return info
+	return info, nil
 }
 
-func nox_curl_post(call string, data string) {
+func nox_curl_post(call string, data string) error {
 	api_url := api_protocol + "://" + api_host + ":" + api_port +
 		"/api/v0/game/" + call
 	body := strings.NewReader(data)
 
 	req, err := http.NewRequest("POST", api_url, body)
 	if err != nil {
-		log.Fatalln(err)
+		return errors.New("[opennoxcontrol]: couldn't generate POST request")
 	}
 	req.Header.Set("X-Token", "xyz")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatalln(err)
+		return errors.New("[opennoxcontrol]: couldn't send POST request")
 	}
 	defer resp.Body.Close()
+	return nil
 }
