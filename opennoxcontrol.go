@@ -21,12 +21,12 @@ var mapnames = [58]string{"autumn", "beneath", "blsphmy", "BluDeath", "Bunker",
 	"TriLevel", "tropix", "uden", "uwcastle", "waterlib", "Waterwar",
 	"Whirl", "winter", "WorldEnd"}
 
-func refresh_to_root(w http.ResponseWriter) {
+func (cp *ControlPanel) refresh_to_root(w http.ResponseWriter) {
 	fmt.Fprintf(w, "<html><head><meta http-equiv=\"Refresh\""+
 		" content=\"0; url=/\" /></head></html>")
 }
 
-func print_players_table(w http.ResponseWriter, info Info) {
+func (cp *ControlPanel) print_players_table(w http.ResponseWriter, info Info) {
 	fmt.Fprintf(w, `<table summary="server details">
 <tr><td>Server Name</td><td>%s</td></tr>
 <tr><td>Current Mode</td><td>%s</td></tr>
@@ -51,9 +51,9 @@ func print_players_table(w http.ResponseWriter, info Info) {
 	fmt.Fprintf(w, "</table>\n")
 }
 
-func print_map_form(w http.ResponseWriter, info Info) {
+func (cp *ControlPanel) print_map_form(w http.ResponseWriter, info Info) {
 	fmt.Fprintf(w, "<br />\n")
-	if !bind_local {
+	if !cp.allowCmd {
 		fmt.Fprintf(w,
 			"\n<b>Map change only allowed when "+
 				"the server is empty.</b>")
@@ -71,7 +71,7 @@ func print_map_form(w http.ResponseWriter, info Info) {
 	fmt.Fprintf(w, `</select><input type="submit" value="Submit" /></form>`)
 }
 
-func print_command_form(w http.ResponseWriter) {
+func (cp *ControlPanel) print_command_form(w http.ResponseWriter) {
 	fmt.Fprintf(w, `<br /><form action="/cmd/" method="post">
 <label>Command</label>
 <input type="text" name="data" />
@@ -80,7 +80,7 @@ func print_command_form(w http.ResponseWriter) {
 `)
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
+func (cp *ControlPanel) rootHandler(w http.ResponseWriter, r *http.Request) {
 	var info Info
 
 	fmt.Fprintf(w, "<!DOCTYPE html>\n"+
@@ -96,15 +96,15 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	print_players_table(w, info)
-	print_map_form(w, info)
+	cp.print_players_table(w, info)
+	cp.print_map_form(w, info)
 
-	if bind_local {
-		print_command_form(w)
+	if cp.allowCmd {
+		cp.print_command_form(w)
 	}
 }
 
-func mapHandler(w http.ResponseWriter, r *http.Request) {
+func (cp *ControlPanel) mapHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	info, err := get_info()
@@ -114,22 +114,22 @@ func mapHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var data = r.Form.Get("data")
 
-	if (bind_local || info.PlayerInfo.Cur == 0) && len(data) > 0 {
+	if (cp.allowCmd || info.PlayerInfo.Cur == 0) && len(data) > 0 {
 		nox_curl_post("map", data)
 	}
 
-	refresh_to_root(w)
+	cp.refresh_to_root(w)
 }
 
-func commandHandler(w http.ResponseWriter, r *http.Request) {
-	if bind_local {
+func (cp *ControlPanel) commandHandler(w http.ResponseWriter, r *http.Request) {
+	if cp.allowCmd {
 		r.ParseForm()
 		var data = r.Form.Get("data")
 
 		nox_curl_post("cmd", data)
 	}
 
-	refresh_to_root(w)
+	cp.refresh_to_root(w)
 }
 
 func main() {
@@ -140,13 +140,6 @@ func main() {
 	} else {
 		bind_host = "0.0.0.0:" + bind_port
 	}
-
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/map/", mapHandler)
-
-	if bind_local {
-		http.HandleFunc("/cmd/", commandHandler)
-	}
-
-	log.Fatal(http.ListenAndServe(bind_host, nil))
+	cp := NewControlPanel(bind_local)
+	log.Fatal(http.ListenAndServe(bind_host, cp))
 }
