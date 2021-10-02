@@ -1,7 +1,20 @@
-# opennoxcontrol
+# OpenNox Server Control Panel
 
-web server that runs on :8080 to talk to the opennox 1.8+ server api using token
+Web server that runs on :8080 to talk to the OpenNox v1.8+ server API using token.
 
-    X-Token: xyz
+## Building
 
-included is an experimental global variable `bind_local` at the top of `cmd/opennox-control/main.go` which changes whether the web server is externally accessible, and lowers its powers to match - since there's currently no authentication, anybody in the world shouldn't be able to change the map when people are playing
+```
+go build ./cmd/opennox-control
+```
+
+## Running
+
+1. Start OpenNox server with `NOX_API_TOKEN=xyz` environment variable, where `xyz` is a random string.
+2. Start control panel: `./opennox-control -token="xyz" -host=127.0.0.1:8080`
+
+This will start control panel on [127.0.0.1:8080](http://127.0.0.1:8080).
+
+If you want to allow external access, pass `-host=:8080` option instead.
+
+Make sure to adjust `-cmd=false` if needed. Since there's currently no authentication, anybody in the world could change the map when people are playing, if that flag is set to true.
