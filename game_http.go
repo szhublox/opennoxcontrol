@@ -24,12 +24,12 @@ func (c *httpClient) GameInfo() (Info, error) {
 	if err != nil {
 		return info, errors.New("[opennoxcontrol]: couldn't get game data")
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return info, errors.New("[opennoxcontrol]: couldn't parse game data")
 	}
 	json.Unmarshal(body, &info)
-	defer resp.Body.Close()
 	return info, nil
 }
 
