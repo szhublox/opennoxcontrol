@@ -20,8 +20,9 @@ var mapnames = [58]string{
 	"Whirl", "winter", "WorldEnd",
 }
 
-func NewControlPanel(allowCmd bool) *ControlPanel {
+func NewControlPanel(game Game, allowCmd bool) *ControlPanel {
 	cp := &ControlPanel{
+		g:        game,
 		mux:      http.NewServeMux(),
 		allowCmd: allowCmd,
 	}
@@ -34,6 +35,7 @@ func NewControlPanel(allowCmd bool) *ControlPanel {
 }
 
 type ControlPanel struct {
+	g        Game
 	mux      *http.ServeMux
 	allowCmd bool
 }
@@ -110,7 +112,7 @@ func (cp *ControlPanel) rootHandler(w http.ResponseWriter, r *http.Request) {
 		"</head>\n"+
 		"<body>\n")
 
-	info, err := get_info()
+	info, err := cp.g.GameInfo()
 	if err != nil {
 		log.Println(err)
 		fmt.Fprintf(w, "Couldn't get game data.</body></html>")
@@ -128,7 +130,7 @@ func (cp *ControlPanel) rootHandler(w http.ResponseWriter, r *http.Request) {
 func (cp *ControlPanel) mapHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
-	info, err := get_info()
+	info, err := cp.g.GameInfo()
 	if err != nil {
 		// silently return since we can't print and expect refresh to work
 		return
@@ -136,7 +138,7 @@ func (cp *ControlPanel) mapHandler(w http.ResponseWriter, r *http.Request) {
 	var data = r.Form.Get("data")
 
 	if (cp.allowCmd || info.PlayerInfo.Cur == 0) && len(data) > 0 {
-		gameSetMap(data)
+		cp.g.ChangeMap(data)
 	}
 
 	cp.refresh_to_root(w)
@@ -147,7 +149,7 @@ func (cp *ControlPanel) commandHandler(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		var data = r.Form.Get("data")
 
-		gameCommand(data)
+		cp.g.Command(data)
 	}
 
 	cp.refresh_to_root(w)

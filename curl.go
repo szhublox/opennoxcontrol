@@ -8,34 +8,19 @@ import (
 	"strings"
 )
 
-var api_protocol = "http"
-var api_host = "127.0.0.1"
-var api_port = "18580"
-
-type Player struct {
-	Name  string `json:"name"`
-	Class string `json:"class"`
+func NewGameHTTP(proto, host, port, token string) Game {
+	baseURL := proto + "://" + host + ":" + port
+	return &httpClient{baseURL: baseURL, token: token}
 }
 
-type PlayerInfo struct {
-	Cur  int      `json:"cur"`
-	Max  int      `json:"max"`
-	List []Player `json:"list"`
+type httpClient struct {
+	baseURL string
+	token   string
 }
 
-type Info struct {
-	Name       string     `json:"name"`
-	Map        string     `json:"map"`
-	Mode       string     `json:"mode"`
-	Vers       string     `json:"vers"`
-	PlayerInfo PlayerInfo `json:"players"`
-}
-
-func get_info() (Info, error) {
-	api_url := api_protocol + "://" + api_host + ":" + api_port +
-		"/api/v0/game/info"
+func (c *httpClient) GameInfo() (Info, error) {
+	api_url := c.baseURL + "/api/v0/game/info"
 	var info Info
-
 	resp, err := http.Get(api_url)
 	if err != nil {
 		return info, errors.New("[opennoxcontrol]: couldn't get game data")
@@ -49,17 +34,17 @@ func get_info() (Info, error) {
 	return info, nil
 }
 
-func nox_curl_post(call string, data string) error {
-	api_url := api_protocol + "://" + api_host + ":" + api_port +
-		"/api/v0/game/" + call
+func (c *httpClient) post(call string, data string) error {
+	api_url := c.baseURL + "/api/v0/game/" + call
 	body := strings.NewReader(data)
 
 	req, err := http.NewRequest("POST", api_url, body)
 	if err != nil {
 		return errors.New("[opennoxcontrol]: couldn't generate POST request")
 	}
-	req.Header.Set("X-Token", "xyz")
-
+	if c.token != "" {
+		req.Header.Set("X-Token", c.token)
+	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return errors.New("[opennoxcontrol]: couldn't send POST request")
@@ -68,10 +53,10 @@ func nox_curl_post(call string, data string) error {
 	return nil
 }
 
-func gameSetMap(name string) error {
-	return nox_curl_post("map", name)
+func (c *httpClient) ChangeMap(name string) error {
+	return c.post("map", name)
 }
 
-func gameCommand(cmd string) error {
-	return nox_curl_post("cmd", cmd)
+func (c *httpClient) Command(cmd string) error {
+	return c.post("cmd", cmd)
 }
