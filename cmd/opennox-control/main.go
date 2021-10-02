@@ -7,23 +7,20 @@ import (
 	octl "github.com/szhublox/opennoxcontrol"
 )
 
-var api_protocol = "http"
-var api_host = "127.0.0.1"
-var api_port = "18580"
-var api_token = "xyz"
+var (
+	apiURL   = "http://127.0.0.1:18580"
+	apiToken = "xyz"
+)
 
-var bind_local = true // 127.0.0.1 instead of 0.0.0.0
-var bind_port = "8080"
+const bindPort = "8080"
+
+var (
+	allowCmds = true
+	bindHost  = "127.0.0.1:" + bindPort // set to 0.0.0.0 to allow external access
+)
 
 func main() {
-	var bind_host string
-
-	if bind_local {
-		bind_host = "127.0.0.1:" + bind_port
-	} else {
-		bind_host = "0.0.0.0:" + bind_port
-	}
-	game := octl.NewGameHTTP(api_protocol, api_host, api_port, api_token)
-	cp := octl.NewControlPanel(game, bind_local)
-	log.Fatal(http.ListenAndServe(bind_host, cp))
+	game := octl.NewGameHTTP(apiURL, apiToken)
+	cp := octl.NewControlPanel(game, allowCmds)
+	log.Fatal(http.ListenAndServe(bindHost, cp))
 }

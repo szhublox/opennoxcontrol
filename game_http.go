@@ -8,9 +8,8 @@ import (
 	"strings"
 )
 
-func NewGameHTTP(proto, host, port, token string) Game {
-	baseURL := proto + "://" + host + ":" + port
-	return &httpClient{baseURL: baseURL, token: token}
+func NewGameHTTP(apiURL string, token string) Game {
+	return &httpClient{baseURL: apiURL, token: token}
 }
 
 type httpClient struct {
