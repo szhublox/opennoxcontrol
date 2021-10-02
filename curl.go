@@ -67,3 +67,11 @@ func nox_curl_post(call string, data string) error {
 	defer resp.Body.Close()
 	return nil
 }
+
+func gameSetMap(name string) error {
+	return nox_curl_post("map", name)
+}
+
+func gameCommand(cmd string) error {
+	return nox_curl_post("cmd", cmd)
+}

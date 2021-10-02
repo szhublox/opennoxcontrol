@@ -136,7 +136,7 @@ func (cp *ControlPanel) mapHandler(w http.ResponseWriter, r *http.Request) {
 	var data = r.Form.Get("data")
 
 	if (cp.allowCmd || info.PlayerInfo.Cur == 0) && len(data) > 0 {
-		nox_curl_post("map", data)
+		gameSetMap(data)
 	}
 
 	cp.refresh_to_root(w)
@@ -147,7 +147,7 @@ func (cp *ControlPanel) commandHandler(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		var data = r.Form.Get("data")
 
-		nox_curl_post("cmd", data)
+		gameCommand(data)
 	}
 
 	cp.refresh_to_root(w)
