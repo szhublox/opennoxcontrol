@@ -119,11 +119,12 @@ func (cp *ControlPanel) rootHandler(w http.ResponseWriter, r *http.Request) {
 		"<style>td { padding-right: 15px; }</style>\n"+
 		"</head>\n"+
 		"<body>\n")
+	defer fmt.Fprintln(w, `</body></html>`)
 
 	info, err := cp.g.GameInfo()
 	if err != nil {
 		log.Println(err)
-		fmt.Fprintf(w, "Couldn't get game data.</body></html>")
+		fmt.Fprintf(w, "Couldn't get game data.")
 		return
 	}
 
