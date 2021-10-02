@@ -1,4 +1,4 @@
-package main
+package opennoxcontrol
 
 import (
 	"encoding/json"

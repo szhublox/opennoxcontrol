@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"net/http"
+
+	octl "github.com/szhublox/opennoxcontrol"
 )
 
 var api_protocol = "http"
@@ -21,7 +23,7 @@ func main() {
 	} else {
 		bind_host = "0.0.0.0:" + bind_port
 	}
-	game := NewGameHTTP(api_protocol, api_host, api_port, api_token)
-	cp := NewControlPanel(game, bind_local)
+	game := octl.NewGameHTTP(api_protocol, api_host, api_port, api_token)
+	cp := octl.NewControlPanel(game, bind_local)
 	log.Fatal(http.ListenAndServe(bind_host, cp))
 }

@@ -1,4 +1,4 @@
-package main
+package opennoxcontrol
 
 type Player struct {
 	Name  string `json:"name"`
