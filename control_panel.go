@@ -20,16 +20,27 @@ var defaultMaps = []string{
 	"Whirl", "winter", "WorldEnd",
 }
 
-func NewControlPanel(game Game, allowCmd bool) *ControlPanel {
+type Options struct {
+	AllowCommands  bool
+	AllowMapChange bool
+}
+
+func NewControlPanel(game Game, opts *Options) *ControlPanel {
+	if opts == nil {
+		// everything defaults to false
+		opts = &Options{}
+	}
 	cp := &ControlPanel{
-		g:        game,
-		mux:      http.NewServeMux(),
-		allowCmd: allowCmd,
-		maps:     defaultMaps,
+		g:    game,
+		mux:  http.NewServeMux(),
+		opts: *opts,
+		maps: defaultMaps,
 	}
 	cp.mux.HandleFunc("/", cp.rootHandler)
-	cp.mux.HandleFunc("/map/", cp.mapHandler)
-	if allowCmd {
+	if opts.AllowMapChange || opts.AllowCommands {
+		cp.mux.HandleFunc("/map/", cp.mapHandler)
+	}
+	if opts.AllowCommands {
 		cp.mux.HandleFunc("/cmd/", cp.commandHandler)
 	}
 	if list, err := game.ListMaps(); err == nil {
@@ -42,10 +53,10 @@ func NewControlPanel(game Game, allowCmd bool) *ControlPanel {
 }
 
 type ControlPanel struct {
-	g        Game
-	mux      *http.ServeMux
-	allowCmd bool
-	maps     []string
+	g    Game
+	mux  *http.ServeMux
+	opts Options
+	maps []string
 }
 
 func (cp *ControlPanel) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +95,7 @@ func (cp *ControlPanel) print_players_table(w http.ResponseWriter, info Info) {
 
 func (cp *ControlPanel) print_map_form(w http.ResponseWriter, info Info) {
 	fmt.Fprintf(w, "<br />\n")
-	if !cp.allowCmd {
+	if !cp.opts.AllowCommands {
 		fmt.Fprintf(w,
 			"\n<b>Map change only allowed when "+
 				"the server is empty.</b>")
@@ -129,32 +140,35 @@ func (cp *ControlPanel) rootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cp.print_players_table(w, info)
-	cp.print_map_form(w, info)
-
-	if cp.allowCmd {
+	if cp.opts.AllowMapChange || cp.opts.AllowCommands {
+		cp.print_map_form(w, info)
+	}
+	if cp.opts.AllowCommands {
 		cp.print_command_form(w)
 	}
 }
 
 func (cp *ControlPanel) mapHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	if cp.opts.AllowMapChange || cp.opts.AllowCommands {
+		r.ParseForm()
 
-	info, err := cp.g.GameInfo()
-	if err != nil {
-		// silently return since we can't print and expect refresh to work
-		return
-	}
-	var data = r.Form.Get("data")
+		info, err := cp.g.GameInfo()
+		if err != nil {
+			// silently return since we can't print and expect refresh to work
+			return
+		}
+		var data = r.Form.Get("data")
 
-	if (cp.allowCmd || info.PlayerInfo.Cur == 0) && len(data) > 0 {
-		cp.g.ChangeMap(data)
+		if (cp.opts.AllowCommands || info.PlayerInfo.Cur == 0) && len(data) > 0 {
+			cp.g.ChangeMap(data)
+		}
 	}
 
 	cp.refresh_to_root(w)
 }
 
 func (cp *ControlPanel) commandHandler(w http.ResponseWriter, r *http.Request) {
-	if cp.allowCmd {
+	if cp.opts.AllowCommands {
 		r.ParseForm()
 		var data = r.Form.Get("data")
 
