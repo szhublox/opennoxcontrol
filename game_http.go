@@ -3,6 +3,7 @@ package opennoxcontrol
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -50,6 +51,19 @@ func (c *httpClient) post(call string, data string) error {
 	}
 	defer resp.Body.Close()
 	return nil
+}
+
+func (c *httpClient) ListMaps() ([]Map, error) {
+	resp, err := http.Get(c.baseURL + "/api/v0/maps/")
+	if err != nil {
+		return nil, fmt.Errorf("[opennoxcontrol]: couldn't get map list: %v", err)
+	}
+	defer resp.Body.Close()
+	var list []Map
+	if err := json.NewDecoder(resp.Body).Decode(&list); err != nil {
+		return nil, fmt.Errorf("[opennoxcontrol]: couldn't parse map list: %v", err)
+	}
+	return list, nil
 }
 
 func (c *httpClient) ChangeMap(name string) error {

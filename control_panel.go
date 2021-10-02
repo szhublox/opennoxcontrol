@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var mapnames = [58]string{
+var defaultMaps = []string{
 	"autumn", "beneath", "blsphmy", "BluDeath", "Bunker",
 	"Bywaters", "caverna", "Connect4", "courtyrd", "darkLib", "Decrypt",
 	"deserts", "Dewls", "DownDown", "DthTmple", "Duel", "Ennead", "Estate",
@@ -25,11 +25,18 @@ func NewControlPanel(game Game, allowCmd bool) *ControlPanel {
 		g:        game,
 		mux:      http.NewServeMux(),
 		allowCmd: allowCmd,
+		maps:     defaultMaps,
 	}
 	cp.mux.HandleFunc("/", cp.rootHandler)
 	cp.mux.HandleFunc("/map/", cp.mapHandler)
 	if allowCmd {
 		cp.mux.HandleFunc("/cmd/", cp.commandHandler)
+	}
+	if list, err := game.ListMaps(); err == nil {
+		cp.maps = nil
+		for _, m := range list {
+			cp.maps = append(cp.maps, m.Name)
+		}
 	}
 	return cp
 }
@@ -38,6 +45,7 @@ type ControlPanel struct {
 	g        Game
 	mux      *http.ServeMux
 	allowCmd bool
+	maps     []string
 }
 
 func (cp *ControlPanel) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -84,12 +92,12 @@ func (cp *ControlPanel) print_map_form(w http.ResponseWriter, info Info) {
 	fmt.Fprintf(w, `<form action="/map/" method="POST">
 <label>Change Map</label>
 <select name="data">`)
-	for i := 0; i < len(mapnames); i++ {
-		fmt.Fprintf(w, `<option value="%s"`, mapnames[i])
-		if strings.EqualFold(mapnames[i], info.Map) {
+	for _, name := range cp.maps {
+		fmt.Fprintf(w, `<option value="%s"`, name)
+		if strings.EqualFold(name, info.Map) {
 			fmt.Fprintf(w, " selected")
 		}
-		fmt.Fprintf(w, ">%s</option>\n", mapnames[i])
+		fmt.Fprintf(w, ">%s</option>\n", name)
 	}
 	fmt.Fprintf(w, `</select><input type="submit" value="Submit" /></form>`)
 }
