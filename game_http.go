@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// NewGameHTTP creates a new Game client implemented over HTTP protocol.
 func NewGameHTTP(apiURL string, token string) Game {
 	return &httpClient{baseURL: apiURL, token: token}
 }
