@@ -1,0 +1,56 @@
+{{define "root"}}
+{{template "header" .}}
+
+{{$info := .Info}}
+{{$opts := .Opts}}
+
+{{with .Info}}
+<div class="server">
+    <h3>{{ .Name }}</h3>
+    <table summary="server details">
+        <tr><td>Current Map</td><td>{{ .Map }} ({{ .Mode }})</td></tr>
+        <tr><td>Player Count</td><td>{{ .PlayerInfo.Cur }} / {{ .PlayerInfo.Max }}</td></tr>
+    </table><br />
+</div>
+{{end}}
+
+{{with .Info.PlayerInfo.List}}
+<div class="players">
+    <h3>Players:</h3>
+    <table summary="player list">
+        {{range .}}
+        <tr><td class="name">{{.Name}}</td><td class="player {{.Class}}">{{.Class}}</td></tr>
+        {{end}}
+    </table><br />
+</div>
+{{end}}
+
+{{if or .Opts.AllowMapChange .Opts.AllowCommands}}
+    <div class="control">
+        <h3>Control</h3>
+        {{if or .Opts.AllowMapChange .Opts.AllowCommands}}
+            {{if eq .Info.PlayerInfo.Cur 0 | or .Opts.AllowCommands}}
+                <form action="/map/" method="POST">
+                    <label>Change Map</label>
+                    <select name="data">
+                        {{range $m := .Maps}}
+                            <option value="{{ $m }}" {{if eq $info.Map $m}}selected{{end}}>{{ $m }}</option>
+                        {{end}}
+                    </select>
+                    <input type="submit" value="Submit" />
+                </form><br />
+            {{else}}
+                <b class="warning">Map change only allowed when the server is empty.</b><br />
+            {{end}}
+        {{end}}
+        {{if .Opts.AllowCommands}}
+            <form action="/cmd/" method="POST">
+                <label>Command</label>
+                <input type="text" name="data" />
+                <input type="submit" value="Submit" />
+            </form><br />
+        {{end}}
+    </div>
+{{end}}
+{{template "footer" .}}
+{{end}}
