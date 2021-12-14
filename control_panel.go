@@ -25,6 +25,7 @@ type Options struct {
 	AllowMapChange bool
 }
 
+// NewControlPanel creates a new Nox game control panel.
 func NewControlPanel(game Game, opts *Options) *ControlPanel {
 	if opts == nil {
 		// everything defaults to false
