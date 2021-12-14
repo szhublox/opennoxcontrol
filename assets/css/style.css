@@ -1,0 +1,5 @@
+td { padding-right: 15px; }
+.players td.warrior { color: darkred }
+.players td.wizard { color: darkblue }
+.players td.conjurer { color: darkgreen }
+.warning { color: darkorange }
